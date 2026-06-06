@@ -1,0 +1,87 @@
+.distribution-page{
+  padding:30px;
+}
+
+.distribution-page h1{
+  color:#1565C0;
+  margin-bottom:10px;
+}
+
+.page-description{
+  color:#64748B;
+  margin-bottom:30px;
+}
+
+.distribution-cards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+  margin-bottom:30px;
+}
+
+.distribution-card{
+  background:white;
+  padding:25px;
+  border-radius:15px;
+  box-shadow:0 5px 20px rgba(0,0,0,.08);
+  text-align:center;
+}
+
+.distribution-card h2{
+  color:#1565C0;
+  font-size:36px;
+}
+
+.analysis-container{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:25px;
+}
+
+.analysis-card{
+  background:white;
+  padding:25px;
+  border-radius:15px;
+  box-shadow:0 5px 20px rgba(0,0,0,.08);
+}
+
+.analysis-card h2{
+  color:#1565C0;
+  margin-bottom:20px;
+}
+
+.bar-section{
+  margin-bottom:25px;
+}
+
+.bar-label{
+  margin-bottom:8px;
+  font-weight:600;
+}
+
+.bar-background{
+  width:100%;
+  height:25px;
+  background:#E5E7EB;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.bar-normal{
+  height:100%;
+  background:#26A69A;
+}
+
+.bar-pneumonia{
+  height:100%;
+  background:#1565C0;
+}
+
+.analysis-card ul{
+  padding-left:20px;
+}
+
+.analysis-card li{
+  margin-bottom:12px;
+  line-height:1.6;
+}
