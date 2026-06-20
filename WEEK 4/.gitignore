@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Outputs
+output/*.json
+
+# Model Files
+*.h5
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Output files
+face_emotion_module/output/*.json
+face_emotion_module/output/*.xlsx
