@@ -1,0 +1,51 @@
+.theme-toggle{
+
+    width:70px;
+
+    height:36px;
+
+    border:none;
+
+    border-radius:50px;
+
+    background:var(--primary);
+
+    position:relative;
+
+    cursor:pointer;
+
+    padding:3px;
+
+    transition:.35s;
+
+}
+
+.toggle-circle{
+
+    width:30px;
+
+    height:30px;
+
+    border-radius:50%;
+
+    background:white;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    transition:.35s;
+
+    color:#FDB813;
+
+}
+
+.toggle-circle.dark{
+
+    transform:translateX(34px);
+
+    color:#3B82F6;
+
+}

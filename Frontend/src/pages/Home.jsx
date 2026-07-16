@@ -1,11 +1,14 @@
 import "./Home.css";
 import HomeNavbar from "../components/HomeNavbar";
 import { Link } from "react-router-dom";
+import ThemeToggle from "../components/ThemeToggle";
 
 function Home() {
   return (
     <div className="home">
         <HomeNavbar />
+        <ThemeToggle />
+
 
       {/* Hero Section */}
 

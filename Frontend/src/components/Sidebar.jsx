@@ -1,36 +1,130 @@
-import { Link } from "react-router-dom";
+import {
+  NavLink,
+  useNavigate,
+} from "react-router-dom";
 
-function Sidebar() {
+function Sidebar({ isOpen, onClose }) {
+  const navigate = useNavigate();
+
+  const user = JSON.parse(
+    localStorage.getItem("user")
+  );
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   return (
-    <div className="sidebar">
+    <aside
+      className={`sidebar ${
+        isOpen ? "sidebar-open" : ""
+      }`}
+    >
+      <div className="sidebar-menu">
 
-      <Link to="/dashboard">Dashboard</Link>
+        <NavLink
+          to="/dashboard"
+          onClick={onClose}
+        >
+          Dashboard
+        </NavLink>
 
-      <Link to="/distribution">
-        Class Distribution
-      </Link>
+        <NavLink
+          to="/history"
+          onClick={onClose}
+        >
+          Analysis History
+        </NavLink>
 
-      <Link to="/explorer">
-        Dataset Explorer
-      </Link>
+        <NavLink
+          to="/upload"
+          onClick={onClose}
+        >
+          Upload X-Ray
+        </NavLink>
 
-      <Link to="/metadata">
-        Metadata
-      </Link>
+        <NavLink
+          to="/profile"
+          onClick={onClose}
+        >
+          My Profile
+        </NavLink>
 
-      <Link to="/resolution">
-        Resolution Analysis
-      </Link>
+        <NavLink
+          to="/distribution"
+          onClick={onClose}
+        >
+          Class Distribution
+        </NavLink>
 
-      <Link to="/pixel">
-        Pixel Analysis
-      </Link>
+        <NavLink
+          to="/explorer"
+          onClick={onClose}
+        >
+          Dataset Explorer
+        </NavLink>
 
-      <Link to="/about">
-        About
-      </Link>
+        <NavLink
+          to="/metadata"
+          onClick={onClose}
+        >
+          Metadata
+        </NavLink>
 
-    </div>
+        <NavLink
+          to="/resolution"
+          onClick={onClose}
+        >
+          Resolution Analysis
+        </NavLink>
+
+        <NavLink
+          to="/pixel"
+          onClick={onClose}
+        >
+          Pixel Analysis
+        </NavLink>
+
+        <NavLink
+          to="/about"
+          onClick={onClose}
+        >
+          About
+        </NavLink>
+
+      </div>
+
+      <div className="sidebar-user">
+
+        <div className="sidebar-avatar">
+          {user?.first_name?.[0]?.toUpperCase() || "U"}
+        </div>
+
+        <div className="sidebar-user-info">
+
+          <strong>
+            {user
+              ? `${user.first_name} ${user.last_name}`
+              : "User"}
+          </strong>
+
+          <span>
+            {user?.email || ""}
+          </span>
+
+        </div>
+
+        <button
+          className="logout-btn"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+
+      </div>
+
+    </aside>
   );
 }
 

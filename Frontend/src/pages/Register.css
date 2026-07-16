@@ -1,0 +1,553 @@
+/* ===========================
+   Register Page
+=========================== */
+
+.register-page{
+    min-height:100vh;
+    background:linear-gradient(
+135deg,
+#eef7ff,
+#dff5ff,
+#edf8ff
+);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:40px;
+    font-family:'Segoe UI',sans-serif;
+    .register-page{
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:
+
+    radial-gradient(circle at top left,#ffffff,#eef7ff),
+
+    radial-gradient(circle at bottom right,#d8f8ff,#edf7ff);
+
+}
+}
+
+/* ===========================
+   Main Container
+=========================== */
+
+.register-container{
+    width:1200px;
+    max-width:100%;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    background:#ffffff;
+    border-radius:25px;
+    overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.12);
+    animation:fadeUp .6s ease;
+}
+
+/* ===========================
+   Left Side
+=========================== */
+
+.register-left{
+
+    background:linear-gradient(
+        135deg,
+        #1565C0,
+        #1976D2,
+        #26A69A
+    );
+
+
+    position:relative;
+
+    overflow:hidden;
+
+
+
+    color:white;
+
+    padding:60px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+}
+
+.register-left::before{
+
+    content:"";
+
+    position:absolute;
+
+    width:260px;
+
+    height:260px;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.08);
+
+    top:-90px;
+
+    right:-80px;
+
+}
+
+.register-left::after{
+
+    content:"";
+
+    position:absolute;
+
+    width:180px;
+
+    height:180px;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.06);
+
+    bottom:-70px;
+
+    left:-60px;
+
+}
+
+.register-left h1{
+
+    font-size:42px;
+
+    margin-bottom:15px;
+
+    font-weight:700;
+
+}
+
+.register-left h2{
+
+    margin-bottom:20px;
+
+    font-size:30px;
+
+}
+
+.register-left p{
+
+    line-height:1.8;
+
+    opacity:.95;
+
+    font-size:17px;
+
+}
+
+.medical-image{
+
+    margin-top:40px;
+
+    font-size:140px;
+
+    text-align:center;
+
+    animation:float 4s infinite ease-in-out;
+
+}
+
+.logo-section{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+}
+
+.logo-icon{
+
+    font-size:60px;
+
+    flex-shrink:0;
+
+}
+
+.logo-text{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.logo-text h1{
+
+    margin:0;
+
+    line-height:1.1;
+
+}
+
+.tagline{
+
+    margin-top:8px;
+
+    color:#dcefff;
+
+    font-size:17px;
+
+}
+
+.logo-section h1{
+    font-size:42px;
+    font-weight:700;
+    margin-bottom:8px;
+}
+
+.tagline{
+    color:#d8f3ff;
+    font-size:18px;
+    letter-spacing:1px;
+}
+
+.hero-content{
+    margin-top:45px;
+}
+
+.hero-content h2{
+    font-size:34px;
+    margin-bottom:18px;
+}
+
+.hero-content p{
+    line-height:1.8;
+    font-size:18px;
+    color:#eef7ff;
+}
+
+.features{
+    margin-top:40px;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.feature-item{
+
+    background:rgba(255,255,255,.15);
+
+    backdrop-filter:blur(12px);
+
+    padding:14px 20px;
+
+    border-radius:14px;
+
+    font-size:17px;
+
+    cursor:pointer;
+
+    transition:.35s;
+
+
+}
+
+.feature-item:hover{
+
+    transform:translateX(10px);
+
+    background:rgba(255,255,255,.25);
+
+    box-shadow:0 10px 25px rgba(0,0,0,.2);
+
+}
+
+.footer-text{
+
+    margin-top:40px;
+
+    text-align:center;
+
+    color:#d9f2ff;
+
+    font-size:15px;
+
+    letter-spacing:.5px;
+
+}
+
+/* ===========================
+   Right Side
+=========================== */
+
+.register-card{
+
+    background:rgba(255,255,255,.88);
+
+    backdrop-filter:blur(20px);
+
+    border-radius:30px;
+
+    box-shadow:
+
+        0 15px 40px rgba(0,0,0,.15);
+
+    padding:45px;
+
+}
+
+.register-card h2{
+
+    color:#1565C0;
+
+    margin-bottom:8px;
+
+}
+
+.register-card p{
+
+    color:#777;
+
+    margin-bottom:30px;
+
+}
+
+/* ===========================
+   Form
+=========================== */
+
+.row{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:18px;
+
+}
+
+.input-group{
+
+    display:flex;
+
+    align-items:center;
+
+    background:#F7FAFD;
+
+    border:2px solid transparent;
+
+    border-radius:14px;
+
+    padding:0 18px;
+
+    margin-bottom:18px;
+
+    transition:.3s;
+
+}
+
+.input-group:hover{
+
+    border-color:#26A69A;
+
+}
+
+.input-group:focus-within{
+
+    border-color:#1565C0;
+
+    box-shadow:0 0 0 5px rgba(21,101,192,.10);
+
+}
+
+.input-group svg{
+
+    color:#1565C0;
+
+    margin-right:12px;
+
+    font-size:18px;
+
+}
+
+.input-group input,
+
+.input-group select{
+
+    width:100%;
+
+    border:none;
+
+    background:none;
+
+    outline:none;
+
+    padding:16px 0;
+
+    font-size:15px;
+
+}
+
+/* ===========================
+   Button
+=========================== */
+
+.register-btn{
+
+    width:100%;
+
+    margin-top:10px;
+
+    padding:16px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:linear-gradient(
+        135deg,
+        #1565C0,
+        #26A69A
+    );
+
+    color:white;
+
+    font-size:17px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.35s;
+
+}
+
+.register-btn:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:0 15px 30px rgba(21,101,192,.35);
+
+}
+
+/* ===========================
+   Animation
+=========================== */
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(30px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+@keyframes float{
+
+    0%{
+
+        transform:translateY(0);
+
+    }
+
+    50%{
+
+        transform:translateY(-12px);
+
+    }
+
+    100%{
+
+        transform:translateY(0);
+
+    }
+
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media(max-width:992px){
+
+    .register-container{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .register-left{
+
+        display:none;
+
+    }
+
+}
+
+@media(max-width:600px){
+
+    .row{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .register-card{
+
+        padding:30px;
+
+    }
+
+}
+
+.stats{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-top:35px;
+
+}
+
+.stat-box{
+
+    text-align:center;
+
+}
+
+.stat-box h3{
+
+    margin:0;
+
+    font-size:26px;
+
+    color:white;
+
+}
+
+.stat-box span{
+
+    color:#d8f2ff;
+
+    font-size:14px;
+
+}

@@ -1,6 +1,85 @@
 import "./UploadXray.css";
 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { uploadXray } from "../services/uploadService";
+import LoadingSpinner from "../components/LoadingSpinner";
+
 function UploadXray() {
+  const navigate = useNavigate();
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size must be less than 10 MB");
+      return;
+    }
+
+    setSelectedFile(file);
+
+    const previewUrl = URL.createObjectURL(file);
+    setPreview(previewUrl);
+    setZoom(1);
+  };
+
+  const handleAnalyze = async () => {
+    if (!selectedFile) {
+      alert("Please select an X-Ray image");
+      return;
+    }
+
+    const user = JSON.parse(
+      localStorage.getItem("user")
+    );
+
+    if (!user?.id) {
+      alert("Please login again");
+      navigate("/login");
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("image", selectedFile);
+    formData.append("user_id", user.id);
+
+    try {
+      setIsUploading(true);
+
+      const response = await uploadXray(formData);
+
+      const result = response.data.upload;
+
+      console.log("Prediction result:", result);
+
+      navigate("/results", {
+        state: {
+        result: result,
+        imagePreview: preview,
+        },
+    });
+
+    } catch (error) {
+      alert(
+        error.response?.data?.message ||
+        "Upload failed"
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <div className="upload-page">
 
@@ -14,8 +93,6 @@ function UploadXray() {
       </div>
 
       <div className="upload-container">
-
-        {/* Left Panel */}
 
         <div className="instructions-card">
 
@@ -40,8 +117,6 @@ function UploadXray() {
 
         </div>
 
-        {/* Right Panel */}
-
         <div className="upload-card">
 
           <div className="drag-drop-box">
@@ -50,61 +125,105 @@ function UploadXray() {
               📤
             </div>
 
-            <h2>Drag & Drop X-Ray Image</h2>
+            <h2>Select X-Ray Image</h2>
 
-            <p>
-              or click to browse files
-            </p>
+            <p>JPG, JPEG or PNG</p>
 
             <input
               type="file"
               accept=".jpg,.jpeg,.png"
+              onChange={handleFileChange}
             />
-          </div>
-
-          {/* Preview Section */}
-
-          <div className="preview-section">
-
-            <h3>Image Preview</h3>
-
-            <div className="preview-box">
-              X-Ray Preview Here
-            </div>
 
           </div>
 
-          {/* Patient Information */}
+<div className="preview-section">
 
-          <div className="patient-section">
+  <div className="preview-header">
 
-            <h3>Patient Information</h3>
+    <h3>Image Preview</h3>
 
-            <div className="patient-grid">
+    {preview && (
+      <span className="zoom-level">
+        {Math.round(zoom * 100)}%
+      </span>
+    )}
 
-              <input
-                type="text"
-                placeholder="Patient Name"
-              />
+  </div>
 
-              <input
-                type="number"
-                placeholder="Age"
-              />
+  <div className="xray-viewer">
 
-              <select>
-                <option>Gender</option>
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
-              </select>
+    {isUploading && (
+      <div className="viewer-overlay">
+        <LoadingSpinner message="AI model analyzing chest X-Ray..." />
+      </div>
+    )}
 
-            </div>
+    {preview ? (
+      <img
+        src={preview}
+        alt="Selected Chest X-Ray"
+        className="xray-preview-image"
+        style={{
+          transform: `scale(${zoom})`,
+          filter: isUploading ? "blur(3px)" : "none",
+        }}
+      />
+    ) : (
+      <div className="empty-preview">
+        <span>🩻</span>
+        <p>X-Ray Preview Here</p>
+      </div>
+    )}
 
-          </div>
+  </div>
 
-          <button className="analyze-btn">
-            Analyze X-Ray
+  {preview && (
+    <div className="zoom-controls">
+
+      <button
+        type="button"
+        onClick={() =>
+          setZoom((currentZoom) =>
+            Math.max(currentZoom - 0.1, 0.5)
+          )
+        }
+      >
+        −
+      </button>
+
+      <button
+        type="button"
+        className="reset-zoom-btn"
+        onClick={() => setZoom(1)}
+      >
+        Reset
+      </button>
+
+      <button
+        type="button"
+        onClick={() =>
+          setZoom((currentZoom) =>
+            Math.min(currentZoom + 0.1, 3)
+          )
+        }
+      >
+        +
+      </button>
+
+    </div>
+  )}
+
+</div>
+
+          <button
+            className="analyze-btn"
+            onClick={handleAnalyze}
+            disabled={isUploading}
+          >
+            {isUploading
+              ? "Analyzing X-Ray..."
+              : "Analyze X-Ray"}
           </button>
 
         </div>

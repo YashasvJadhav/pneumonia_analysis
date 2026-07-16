@@ -1,9 +1,59 @@
 import "./Login.css";
-import { Link } from "react-router-dom";
+
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
 import { FaLungs } from "react-icons/fa";
+import { toast } from "react-toastify";
+
+import { loginUser } from "../services/authService";
 
 function Login() {
+
+  const navigate = useNavigate();
+
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e) => {
+    setLoginData({
+      ...loginData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleLogin = async (e) => {
+
+    e.preventDefault();
+
+    try {
+
+      const response = await loginUser(loginData);
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(response.data.user)
+      );
+
+      toast.success("Login Successful!");
+
+      navigate("/dashboard");
+
+    } catch (error) {
+
+      toast.error(
+        error.response?.data?.message ||
+        "Login Failed"
+      );
+
+    }
+
+  };
+
   return (
+
     <div className="login-page">
 
       {/* Left Side */}
@@ -18,13 +68,11 @@ function Login() {
 
         </div>
 
-        <h2>
-          Welcome Back
-        </h2>
+        <h2>Welcome Back</h2>
 
         <p>
-          Access your AI-powered Pneumonia Detection
-          dashboard and continue analyzing chest X-rays.
+          Access your AI-powered Pneumonia Detection dashboard
+          and continue analyzing chest X-rays.
         </p>
 
         <div className="login-benefits">
@@ -53,19 +101,31 @@ function Login() {
             Enter your credentials to continue
           </p>
 
-          <input
-            type="email"
-            placeholder="Email Address"
-          />
+          <form onSubmit={handleLogin}>
 
-          <input
-            type="password"
-            placeholder="Password"
-          />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={loginData.email}
+              onChange={handleChange}
+              required
+            />
 
-          <button>
-            Login
-          </button>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={loginData.password}
+              onChange={handleChange}
+              required
+            />
+
+            <button type="submit">
+              Login
+            </button>
+
+          </form>
 
           <Link
             className="forgot-link"
@@ -76,7 +136,7 @@ function Login() {
 
           <p className="register-text">
 
-            New User?
+            New User?{" "}
 
             <Link to="/register">
               Register
@@ -89,7 +149,9 @@ function Login() {
       </div>
 
     </div>
+
   );
+
 }
 
 export default Login;

@@ -7,7 +7,7 @@ from modules.emotion_detector import detect_emotion
 from modules.json_writer import save_result
 
 # Start Webcam
-cap = cv2.VideoCapture(0)  
+cap = cv2.VideoCapture(0)  # Use 0 for webcam or provide video file path
 
 frame_number = 0
 tracking_id = 1
@@ -51,7 +51,7 @@ while True:
         face_roi = frame[y:y+h, x:x+w]
 
         # Run emotion detection every 20 frames
-        if frame_number % 20 == 0:
+        if frame_number % 20  == 0:
 
             emotion_result = detect_emotion(face_roi)
             print(emotion_result)
@@ -144,13 +144,14 @@ while True:
             (0, 255, 0),
             2
         )
-
-    # Show Frame
+        
+        # Show Frame
     cv2.imshow(
         "Face & Emotion Detection",
         frame
     )
-
+       
+    
     # Exit on Q
     key = cv2.waitKey(1)
 

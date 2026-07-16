@@ -21,6 +21,7 @@ html{
   min-height:100vh;
   padding:100px;
   gap:50px;
+  background:var(--surface);
 }
 
 .hero-left{
@@ -63,7 +64,7 @@ html{
 
 .hero-features span{
   font-size:16px;
-  color:#1F2937;
+  color: var(--text);
 }
 
 .hero-buttons{
@@ -84,7 +85,7 @@ html{
 }
 
 .secondary-btn{
-  background:white;
+  background: var(--surface);
   color:#1565C0;
   border:2px solid #1565C0;
   padding:15px 35px;
@@ -101,11 +102,11 @@ html{
 }
 
 .xray-card{
-  background:white;
+  background: var(--surface);
   padding: 30px;
   width:400px;
   border-radius:24px;
-  box-shadow: 0 20px 40px rgba(15,23,42,.08);
+  box-shadow: var(--shadow);
   border:1px solid #E2E8F0;
 }
 
@@ -117,13 +118,13 @@ html{
   display:flex;
   justify-content:center;
   align-items:center;
-  color:#374151;
+  color: var(--text);
   font-weight:bold;
 }
 
 .login-card{
    margin-top:25px;
-  background:#F8FAFC;
+  background: var(--surface);
   padding:25px;
   border-radius:16px;
   border:1px solid #E2E8F0;
@@ -169,12 +170,12 @@ html{
 
   padding:80px 100px;
 
-  background:white;
+  background: var(--surface);
 
 }
 
 .stat-card{
-  background:#ffffff;
+  background: var(--surface);
 
   padding:30px;
 
@@ -182,7 +183,7 @@ html{
 
   text-align:center;
 
-  box-shadow:0 8px 25px rgba(0,0,0,.08);
+  box-shadow: var(--shadow);
 }
 
 .stat-card h2{
@@ -224,13 +225,13 @@ html{
 }
 
 .feature-card{
-  background:white;
+  background: var(--surface);
 
   padding:35px;
 
   border-radius:20px;
 
-  box-shadow:0 10px 25px rgba(0,0,0,.06);
+  box-shadow: var(--shadow);
 
   transition:.3s;
 }
@@ -255,7 +256,7 @@ html{
 
 .workflow-section{
   padding:100px;
-  background:white;
+  background: var(--surface);
 }
 
 .workflow-section h2{
@@ -321,7 +322,7 @@ html{
 
   padding:100px;
 
-  background:white;
+  background: var(--surface);
 }
 
 .why-left{
@@ -356,7 +357,7 @@ html{
 
   width:450px;
 
-  box-shadow:0 20px 40px rgba(21,101,192,.25);
+  box-shadow: var(--shadow);
 }
 
 .why-card h3{
@@ -411,7 +412,7 @@ html{
 
 .upload-btn{
 
-  background:white;
+  background: var(--surface);
   color:#1565C0;
 
   border:none;
