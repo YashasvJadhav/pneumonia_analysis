@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { FaDownload } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 import API from "../services/api";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -52,6 +53,31 @@ function Results() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDownloadReport = async () => {
+    if (!result?.id) return;
+    try {
+      toast.info("Generating report PDF...");
+      const response = await API.get(
+        `/api/analysis/${result.id}/report`,
+        { responseType: "blob" }
+      );
+      
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `pneumoai_report_${result.id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Report downloaded successfully!");
+    } catch (error) {
+      console.error("Report download error:", error);
+      toast.error("Failed to download medical report.");
+    }
   };
 
 
@@ -189,12 +215,21 @@ function Results() {
 
       <div className="results-header">
 
-        <h1>Analysis Result</h1>
+        <div>
+          <h1>Analysis Result</h1>
 
-        <p>
-          AI-powered chest X-ray
-          classification result
-        </p>
+          <p>
+            AI-powered chest X-ray
+            classification result
+          </p>
+        </div>
+
+        <button
+          className="download-report-btn"
+          onClick={handleDownloadReport}
+        >
+          <FaDownload /> Download Report
+        </button>
 
       </div>
 

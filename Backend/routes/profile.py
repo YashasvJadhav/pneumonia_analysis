@@ -1,14 +1,20 @@
-from flask import Blueprint, request, jsonify
-
+from flask import Blueprint, request, jsonify, g
 from database import db
 from models import User
+from routes.auth import token_required
 
 
 profile_bp = Blueprint("profile", __name__)
 
 
 @profile_bp.route("/api/profile/<int:user_id>", methods=["GET"])
+@token_required
 def get_profile(user_id):
+    if g.user_id != user_id:
+        return jsonify({
+            "success": False,
+            "message": "Unauthorized access to profile"
+        }), 403
 
     user = db.session.get(User, user_id)
 
@@ -39,7 +45,13 @@ def get_profile(user_id):
 from datetime import datetime
 
 @profile_bp.route("/api/profile/<int:user_id>", methods=["PUT"])
+@token_required
 def update_profile(user_id):
+    if g.user_id != user_id:
+        return jsonify({
+            "success": False,
+            "message": "Unauthorized access to profile"
+        }), 403
     user = db.session.get(User, user_id)
 
     if not user:

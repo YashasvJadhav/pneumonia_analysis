@@ -2,6 +2,7 @@ import "./AnalysisHistory.css";
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import API from "../services/api";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -13,6 +14,7 @@ function AnalysisHistory() {
   const [analyses, setAnalyses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sortBy, setSortBy] = useState("latest");
 
   const user = JSON.parse(
     localStorage.getItem("user")
@@ -64,6 +66,66 @@ function AnalysisHistory() {
     return new Date(date).toLocaleString();
   };
 
+
+  const getSortedAnalyses = () => {
+    const sorted = [...analyses];
+    switch (sortBy) {
+      case "latest":
+        return sorted.sort((a, b) => new Date(b.uploaded_at) - new Date(a.uploaded_at));
+      case "oldest":
+        return sorted.sort((a, b) => new Date(a.uploaded_at) - new Date(b.uploaded_at));
+      case "high-conf":
+        return sorted.sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+      case "low-conf":
+        return sorted.sort((a, b) => (a.confidence || 0) - (b.confidence || 0));
+      case "pneu-first":
+        return sorted.sort((a, b) => {
+          const isAPneu = a.prediction?.toUpperCase() === "PNEUMONIA";
+          const isBPneu = b.prediction?.toUpperCase() === "PNEUMONIA";
+          if (isAPneu && !isBPneu) return -1;
+          if (!isAPneu && isBPneu) return 1;
+          return new Date(b.uploaded_at) - new Date(a.uploaded_at);
+        });
+      case "norm-first":
+        return sorted.sort((a, b) => {
+          const isANorm = a.prediction?.toUpperCase() === "NORMAL";
+          const isBNorm = b.prediction?.toUpperCase() === "NORMAL";
+          if (isANorm && !isBNorm) return -1;
+          if (!isANorm && isBNorm) return 1;
+          return new Date(b.uploaded_at) - new Date(a.uploaded_at);
+        });
+      case "name-a-z":
+        return sorted.sort((a, b) => (a.image_name || "").localeCompare(b.image_name || ""));
+      case "name-z-a":
+        return sorted.sort((a, b) => (b.image_name || "").localeCompare(a.image_name || ""));
+      default:
+        return sorted;
+    }
+  };
+
+  const handleDownloadReport = async (analysisId) => {
+    try {
+      toast.info("Generating report PDF...");
+      const response = await API.get(
+        `/api/analysis/${analysisId}/report`,
+        { responseType: "blob" }
+      );
+      
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `pneumoai_report_${analysisId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Report downloaded successfully!");
+    } catch (error) {
+      console.error("Report download error:", error);
+      toast.error("Failed to download medical report.");
+    }
+  };
 
   const handleViewResult = (analysisId) => {
     navigate(`/results/${analysisId}`);
@@ -193,6 +255,25 @@ function AnalysisHistory() {
               </p>
             </div>
 
+            <div className="history-sort-container">
+              <label htmlFor="history-sort">Sort By:</label>
+              <select
+                id="history-sort"
+                className="history-sort-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="latest">Latest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="high-conf">Highest Confidence</option>
+                <option value="low-conf">Lowest Confidence</option>
+                <option value="pneu-first">Pneumonia First</option>
+                <option value="norm-first">Normal First</option>
+                <option value="name-a-z">File Name (A-Z)</option>
+                <option value="name-z-a">File Name (Z-A)</option>
+              </select>
+            </div>
+
           </div>
 
 
@@ -213,7 +294,7 @@ function AnalysisHistory() {
 
               <tbody>
 
-                {analyses.map((analysis) => {
+                {getSortedAnalyses().map((analysis) => {
 
                   const isPneumonia =
                     analysis.prediction ===
@@ -285,16 +366,28 @@ function AnalysisHistory() {
 
                       <td>
 
-                        <button
-                          className="view-result-btn"
-                          onClick={() =>
-                            handleViewResult(
-                              analysis.id
-                            )
-                          }
-                        >
-                          View Result
-                        </button>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            className="view-result-btn"
+                            onClick={() =>
+                              handleViewResult(
+                                analysis.id
+                              )
+                            }
+                          >
+                            View Result
+                          </button>
+                          <button
+                            className="history-report-btn"
+                            onClick={() =>
+                              handleDownloadReport(
+                                analysis.id
+                              )
+                            }
+                          >
+                            Report
+                          </button>
+                        </div>
 
                       </td>
 

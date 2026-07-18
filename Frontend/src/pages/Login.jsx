@@ -37,6 +37,10 @@ function Login() {
         JSON.stringify(response.data.user)
       );
 
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+      }
+
       toast.success("Login Successful!");
 
       navigate("/dashboard");

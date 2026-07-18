@@ -1,11 +1,50 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app, g
 
 from database import db, bcrypt
 from models import User
 
-from datetime import datetime
+from datetime import datetime, timedelta
+import jwt
+from functools import wraps
 
 auth_bp = Blueprint("auth", __name__)
+
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(" ")[1]
+        
+        if not token:
+            return jsonify({
+                "success": False,
+                "message": "Token is missing"
+            }), 401
+        
+        try:
+            data = jwt.decode(
+                token,
+                current_app.config['SECRET_KEY'],
+                algorithms=['HS256']
+            )
+            g.user_id = int(data['sub'])
+        except jwt.ExpiredSignatureError:
+            return jsonify({
+                "success": False,
+                "message": "Token has expired"
+            }), 401
+        except jwt.InvalidTokenError:
+            return jsonify({
+                "success": False,
+                "message": "Token is invalid"
+            }), 401
+        
+        return f(*args, **kwargs)
+    return decorated
 
 
 
@@ -87,11 +126,25 @@ def login():
             "message": "Invalid Password"
         }), 401
 
+    # Generate JWT token
+    exp_days = current_app.config.get("JWT_EXPIRATION_DAYS", 7)
+    token = jwt.encode(
+        {
+            "sub": str(user.id),
+            "iat": datetime.utcnow(),
+            "exp": datetime.utcnow() + timedelta(days=exp_days)
+        },
+        current_app.config["SECRET_KEY"],
+        algorithm="HS256"
+    )
+
     return jsonify({
 
         "success": True,
 
         "message": "Login Successful",
+
+        "token": token,
 
         "user": {
 

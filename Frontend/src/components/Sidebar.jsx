@@ -12,6 +12,7 @@ function Sidebar({ isOpen, onClose }) {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     navigate("/login");
   };
 
@@ -52,38 +53,10 @@ function Sidebar({ isOpen, onClose }) {
         </NavLink>
 
         <NavLink
-          to="/distribution"
+          to="/model-analysis"
           onClick={onClose}
         >
-          Class Distribution
-        </NavLink>
-
-        <NavLink
-          to="/explorer"
-          onClick={onClose}
-        >
-          Dataset Explorer
-        </NavLink>
-
-        <NavLink
-          to="/metadata"
-          onClick={onClose}
-        >
-          Metadata
-        </NavLink>
-
-        <NavLink
-          to="/resolution"
-          onClick={onClose}
-        >
-          Resolution Analysis
-        </NavLink>
-
-        <NavLink
-          to="/pixel"
-          onClick={onClose}
-        >
-          Pixel Analysis
+          Model Analysis
         </NavLink>
 
         <NavLink

@@ -26,10 +26,20 @@ with app.app_context():
     db.create_all()
     try:
         db.session.execute(db.text("ALTER TABLE uploads ADD COLUMN IF NOT EXISTS heatmap_path TEXT;"))
+        db.session.execute(db.text("ALTER TABLE uploads ADD COLUMN IF NOT EXISTS image_hash VARCHAR(64);"))
         db.session.commit()
     except Exception as e:
         db.session.rollback()
         print("Database schema migration warning:", e)
+
+    try:
+        db.session.execute(db.text("CREATE INDEX IF NOT EXISTS idx_uploads_user_id ON uploads(user_id);"))
+        db.session.execute(db.text("CREATE INDEX IF NOT EXISTS idx_uploads_image_hash ON uploads(image_hash);"))
+        db.session.execute(db.text("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print("Database index creation warning:", e)
 
 
 @app.route("/")

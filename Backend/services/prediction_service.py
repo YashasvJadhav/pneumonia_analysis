@@ -2,17 +2,22 @@ import os
 import numpy as np
 from PIL import Image
 from tensorflow.keras.models import load_model
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))
 )
 
-MODEL_PATH = os.path.join(
-    BASE_DIR,
-    "ml_models",
-    "pneumonia_densenet121.keras"
-)
+# Fetch model path from environment, falling back to development path
+env_model_path = os.getenv("MODEL_PATH", "ml_models/pneumonia_densenet121.keras")
+if os.path.isabs(env_model_path):
+    MODEL_PATH = env_model_path
+else:
+    MODEL_PATH = os.path.join(BASE_DIR, env_model_path)
 
 
 print("Loading pneumonia detection model...")

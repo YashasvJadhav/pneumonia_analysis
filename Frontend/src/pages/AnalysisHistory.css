@@ -85,6 +85,11 @@
 .history-table-heading {
   padding: 24px;
   border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .history-table-heading h2 {
@@ -249,6 +254,21 @@
   .history-summary > div {
     width: 100%;
   }
+
+  .history-table-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .history-sort-container {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .history-sort-select {
+    width: 65%;
+  }
 }
 
 .view-result-btn {
@@ -265,6 +285,54 @@
 
 .view-result-btn:hover {
   background: #1565c0;
+  color: white;
+}
+
+.history-sort-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.history-sort-container label {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.history-sort-select {
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #334155;
+  background-color: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.history-sort-select:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.history-report-btn {
+  padding: 9px 14px;
+  border: 1px solid #26a69a;
+  border-radius: 8px;
+  background: #f0fbf9;
+  color: #00796b;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.history-report-btn:hover {
+  background: #26a69a;
   color: white;
 }
 

@@ -33,11 +33,7 @@ import Results from "./pages/Results";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 
-import ClassDistribution from "./pages/ClassDistribution";
-import DatasetExplorer from "./pages/DatasetExplorer";
-import Metadata from "./pages/Metadata";
-import ResolutionAnalysis from "./pages/ResolutionAnalysis";
-import PixelAnalysis from "./pages/PixelAnalysis";
+import ModelAnalysis from "./pages/ModelAnalysis";
 import About from "./pages/About";
 
 
@@ -229,53 +225,13 @@ function Layout() {
             />
 
 
-            {/* Dataset Analytics */}
+            {/* Model Analysis */}
 
             <Route
-              path="/distribution"
+              path="/model-analysis"
               element={
                 <PrivateRoute>
-                  <ClassDistribution />
-                </PrivateRoute>
-              }
-            />
-
-
-            <Route
-              path="/explorer"
-              element={
-                <PrivateRoute>
-                  <DatasetExplorer />
-                </PrivateRoute>
-              }
-            />
-
-
-            <Route
-              path="/metadata"
-              element={
-                <PrivateRoute>
-                  <Metadata />
-                </PrivateRoute>
-              }
-            />
-
-
-            <Route
-              path="/resolution"
-              element={
-                <PrivateRoute>
-                  <ResolutionAnalysis />
-                </PrivateRoute>
-              }
-            />
-
-
-            <Route
-              path="/pixel"
-              element={
-                <PrivateRoute>
-                  <PixelAnalysis />
+                  <ModelAnalysis />
                 </PrivateRoute>
               }
             />
