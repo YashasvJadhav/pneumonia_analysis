@@ -3,7 +3,7 @@ import "./Login.css";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { FaLungs } from "react-icons/fa";
+import { FaLungs, FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 import { loginUser } from "../services/authService";
@@ -130,6 +130,13 @@ function Login() {
             </button>
 
           </form>
+
+          <Link
+            className="back-to-home-link"
+            to="/"
+          >
+            <FaArrowLeft className="back-arrow-icon" /> Back to Home
+          </Link>
 
           <Link
             className="forgot-link"
