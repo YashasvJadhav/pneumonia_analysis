@@ -1,6 +1,12 @@
 import os
 import numpy as np
 from PIL import Image
+import tensorflow as tf
+
+# Optimize CPU memory footprint to prevent Render Out-Of-Memory (OOM) worker crashes
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.config.threading.set_inter_op_parallelism_threads(1)
+
 from tensorflow.keras.models import load_model
 from dotenv import load_dotenv
 
