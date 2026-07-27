@@ -26,14 +26,38 @@ else:
     MODEL_PATH = os.path.join(BASE_DIR, env_model_path)
 
 
-print("Loading pneumonia detection model...")
+model = None
+conv_model = None
+grad_sub_model = None
 
-model = load_model(MODEL_PATH)
-
-print("Pneumonia detection model loaded successfully!")
+def get_model():
+    global model, conv_model, grad_sub_model
+    if model is None:
+        print("Loading pneumonia detection model on demand...")
+        from tensorflow.keras.models import load_model
+        model = load_model(MODEL_PATH)
+        
+        # Pre-build lightweight sub-models for optimized, low-RAM Grad-CAM
+        last_conv_layer_name = "conv5_block16_concat"
+        conv_layer = model.get_layer(last_conv_layer_name)
+        
+        conv_model = tf.keras.models.Model(inputs=model.inputs, outputs=conv_layer.output)
+        
+        shape = [dim for dim in conv_layer.output.shape[1:]]
+        sub_input = tf.keras.Input(shape=shape)
+        x = model.get_layer('bn')(sub_input)
+        x = model.get_layer('relu')(x)
+        x = model.get_layer('global_average_pooling2d_1')(x)
+        x = model.get_layer('dense_2')(x)
+        sub_output = model.get_layer('dense_3')(x)
+        grad_sub_model = tf.keras.models.Model(inputs=sub_input, outputs=sub_output)
+        
+        print("Pneumonia detection model loaded successfully!")
+    return model, conv_model, grad_sub_model
 
 
 def predict_xray(image_path):
+    model, _, _ = get_model()
 
     # Load image
     image = Image.open(image_path)
@@ -84,6 +108,7 @@ import tensorflow as tf
 from PIL import ImageOps
 
 def generate_gradcam(image_path, save_path):
+    _, conv_model, grad_sub_model = get_model()
     try:
         # 1. Load image and preprocess matching predict_xray
         img = Image.open(image_path).convert("RGB")
@@ -93,38 +118,24 @@ def generate_gradcam(image_path, save_path):
         img_array = np.array(img_resized, dtype=np.float32) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
-        # 2. Automatically detect last convolutional layer name
-        last_conv_layer_name = None
-        for layer in reversed(model.layers):
-            if isinstance(layer, tf.keras.layers.Conv2D) or 'conv' in layer.name or 'concat' in layer.name:
-                last_conv_layer_name = layer.name
-                break
-        
-        if not last_conv_layer_name:
-            last_conv_layer_name = "conv5_block16_concat"
+        # 2. Get conv outputs outside the GradientTape (saves massive graph-tracing memory!)
+        conv_outputs = conv_model(img_array)
 
-        print(f"Generating Grad-CAM using detected layer: {last_conv_layer_name}")
-
-        # 3. Build Grad-CAM sub-model
-        grad_model = tf.keras.models.Model(
-            inputs=model.inputs,
-            outputs=[model.get_layer(last_conv_layer_name).output, model.output]
-        )
-
-        # 4. Record forward operations and compute class gradients
+        # 3. Compute gradients using tape ONLY on the remaining 5 layers
         with tf.GradientTape() as tape:
-            conv_outputs, predictions = grad_model(img_array)
+            tape.watch(conv_outputs)
+            predictions = grad_sub_model(conv_outputs)
             class_channel = predictions[:, 0]
 
-        # Compute gradients of Sigmoid output w.r.t features map activations
+        # Compute gradients of output w.r.t features map activations
         grads = tape.gradient(class_channel, conv_outputs)
 
         # Global average pool the gradients
         pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
 
         # Weight the feature map channels
-        conv_outputs = conv_outputs[0]
-        heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
+        conv_outputs_val = conv_outputs[0]
+        heatmap = conv_outputs_val @ pooled_grads[..., tf.newaxis]
         heatmap = tf.squeeze(heatmap)
 
         # Apply ReLU to retain positive contributions and normalize
@@ -135,14 +146,14 @@ def generate_gradcam(image_path, save_path):
         heatmap = heatmap / max_val
         heatmap = heatmap.numpy()
 
-        # 5. Convert 2D heatmap array to PIL grayscale
+        # 4. Convert 2D heatmap array to PIL grayscale
         heatmap_uint8 = np.uint8(255 * heatmap)
         heatmap_img = Image.fromarray(heatmap_uint8, mode="L")
 
         # Colorize using PILOps (Black -> Blue -> Red/Yellow)
         colored_heatmap = ImageOps.colorize(heatmap_img, black="black", white="red", mid="blue")
 
-        # 6. Resize and Blend with original X-ray
+        # 5. Resize and Blend with original X-ray
         original_img = Image.open(image_path).convert("RGB")
         colored_heatmap = colored_heatmap.resize(original_size, Image.Resampling.LANCZOS)
         
