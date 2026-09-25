@@ -1,9 +1,14 @@
 import os
+# Disable oneDNN scratch buffers and reduce log noise before importing TensorFlow
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+import gc
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import tensorflow as tf
 
-# Optimize CPU memory footprint to prevent Render Out-Of-Memory (OOM) worker crashes
+# Restrict TensorFlow thread pools to prevent multi-threading memory spikes on Render Free
 tf.config.threading.set_intra_op_parallelism_threads(1)
 tf.config.threading.set_inter_op_parallelism_threads(1)
 
@@ -12,7 +17,6 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))
@@ -34,14 +38,16 @@ def get_model():
     global model, conv_model, grad_sub_model
     if model is None:
         print("Loading pneumonia detection model on demand...")
-        from tensorflow.keras.models import load_model
-        model = load_model(MODEL_PATH)
+        # compile=False avoids loading optimizer state, momentum buffers, and training metrics into RAM
+        model = load_model(MODEL_PATH, compile=False)
         
         # Pre-build lightweight sub-models for optimized, low-RAM Grad-CAM
         last_conv_layer_name = "conv5_block16_concat"
         conv_layer = model.get_layer(last_conv_layer_name)
         
-        conv_model = tf.keras.models.Model(inputs=model.inputs, outputs=conv_layer.output)
+        # Use single-tensor input to eliminate Keras 3 input structure warning
+        model_input = model.inputs[0] if isinstance(model.inputs, list) else model.input
+        conv_model = tf.keras.models.Model(inputs=model_input, outputs=conv_layer.output)
         
         shape = [dim for dim in conv_layer.output.shape[1:]]
         sub_input = tf.keras.Input(shape=shape)
@@ -52,6 +58,7 @@ def get_model():
         sub_output = model.get_layer('dense_3')(x)
         grad_sub_model = tf.keras.models.Model(inputs=sub_input, outputs=sub_output)
         
+        gc.collect()
         print("Pneumonia detection model loaded successfully!")
     return model, conv_model, grad_sub_model
 
@@ -59,32 +66,19 @@ def get_model():
 def predict_xray(image_path):
     model, _, _ = get_model()
 
-    # Load image
-    image = Image.open(image_path)
+    # Load and preprocess image within context manager
+    with Image.open(image_path) as image:
+        image = image.convert("RGB")
+        image = image.resize((224, 224))
+        image_array = np.array(image, dtype=np.float32) / 255.0
+        image_array = np.expand_dims(image_array, axis=0)
 
-    # Same preprocessing used during training
-    image = image.convert("RGB")
-    image = image.resize((224, 224))
+    # Direct functional execution: bypasses model.predict() batch adapter and memory buffer allocation
+    raw_output = model(image_array, training=False)
+    prediction = float(raw_output[0][0])
 
-    # Convert image to NumPy array
-    image_array = np.array(image, dtype=np.float32)
-
-    # Normalize exactly like training
-    image_array = image_array / 255.0
-
-    # Add batch dimension
-    image_array = np.expand_dims(
-        image_array,
-        axis=0
-    )
-
-    # Prediction
-    prediction = float(
-        model.predict(
-            image_array,
-            verbose=0
-        )[0][0]
-    )
+    del image_array, raw_output
+    gc.collect()
 
     # Training labels:
     # 0 = NORMAL
@@ -104,65 +98,74 @@ def predict_xray(image_path):
     }
 
 
-import tensorflow as tf
-from PIL import ImageOps
-
 def generate_gradcam(image_path, save_path):
+    # Default to False on resource-constrained environments (e.g. Render 512MB RAM) to guarantee prediction stability
+    if os.getenv("ENABLE_GRADCAM", "false").lower() not in ("true", "1", "yes"):
+        print("Grad-CAM generation skipped per ENABLE_GRADCAM setting.")
+        return False
+
     _, conv_model, grad_sub_model = get_model()
     try:
-        # 1. Load image and preprocess matching predict_xray
-        img = Image.open(image_path).convert("RGB")
-        original_size = img.size
-        img_resized = img.resize((224, 224))
-        
-        img_array = np.array(img_resized, dtype=np.float32) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
+        # 1. Load image once and preprocess for inference and blending
+        with Image.open(image_path) as original_img:
+            original_img = original_img.convert("RGB")
+            original_size = original_img.size
+            img_resized = original_img.resize((224, 224))
+            
+            img_array = np.array(img_resized, dtype=np.float32) / 255.0
+            img_array = np.expand_dims(img_array, axis=0)
 
-        # 2. Get conv outputs outside the GradientTape (saves massive graph-tracing memory!)
-        conv_outputs = conv_model(img_array)
+            # 2. Get conv outputs outside the GradientTape (saves massive graph-tracing memory!)
+            conv_outputs = conv_model(img_array, training=False)
 
-        # 3. Compute gradients using tape ONLY on the remaining 5 layers
-        with tf.GradientTape() as tape:
-            tape.watch(conv_outputs)
-            predictions = grad_sub_model(conv_outputs)
-            class_channel = predictions[:, 0]
+            # 3. Compute gradients using tape ONLY on the remaining 5 layers
+            with tf.GradientTape() as tape:
+                tape.watch(conv_outputs)
+                predictions = grad_sub_model(conv_outputs, training=False)
+                class_channel = predictions[:, 0]
 
-        # Compute gradients of output w.r.t features map activations
-        grads = tape.gradient(class_channel, conv_outputs)
+            # Compute gradients of output w.r.t features map activations
+            grads = tape.gradient(class_channel, conv_outputs)
 
-        # Global average pool the gradients
-        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+            # Global average pool the gradients
+            pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
 
-        # Weight the feature map channels
-        conv_outputs_val = conv_outputs[0]
-        heatmap = conv_outputs_val @ pooled_grads[..., tf.newaxis]
-        heatmap = tf.squeeze(heatmap)
+            # Weight the feature map channels
+            conv_outputs_val = conv_outputs[0]
+            heatmap = conv_outputs_val @ pooled_grads[..., tf.newaxis]
+            heatmap = tf.squeeze(heatmap)
 
-        # Apply ReLU to retain positive contributions and normalize
-        heatmap = tf.maximum(heatmap, 0)
-        max_val = tf.reduce_max(heatmap)
-        if max_val == 0:
-            max_val = 1e-10
-        heatmap = heatmap / max_val
-        heatmap = heatmap.numpy()
+            # Apply ReLU to retain positive contributions and normalize
+            heatmap = tf.maximum(heatmap, 0)
+            max_val = tf.reduce_max(heatmap)
+            if max_val == 0:
+                max_val = 1e-10
+            heatmap = heatmap / max_val
+            heatmap_np = heatmap.numpy()
 
-        # 4. Convert 2D heatmap array to PIL grayscale
-        heatmap_uint8 = np.uint8(255 * heatmap)
-        heatmap_img = Image.fromarray(heatmap_uint8, mode="L")
+            # 4. Convert 2D heatmap array to PIL grayscale
+            heatmap_uint8 = np.uint8(255 * heatmap_np)
+            heatmap_img = Image.fromarray(heatmap_uint8, mode="L")
 
-        # Colorize using PILOps (Black -> Blue -> Red/Yellow)
-        colored_heatmap = ImageOps.colorize(heatmap_img, black="black", white="red", mid="blue")
+            # Colorize using PILOps (Black -> Blue -> Red/Yellow)
+            colored_heatmap = ImageOps.colorize(heatmap_img, black="black", white="red", mid="blue")
 
-        # 5. Resize and Blend with original X-ray
-        original_img = Image.open(image_path).convert("RGB")
-        colored_heatmap = colored_heatmap.resize(original_size, Image.Resampling.LANCZOS)
-        
-        # Blend original 60% and heatmap 40%
-        overlay_img = Image.blend(original_img, colored_heatmap, alpha=0.4)
-        
-        # Save output image
-        overlay_img.save(save_path)
-        return True
+            # 5. Resize and Blend with original X-ray
+            colored_heatmap = colored_heatmap.resize(original_size, Image.Resampling.LANCZOS)
+            
+            # Blend original 60% and heatmap 40%
+            overlay_img = Image.blend(original_img, colored_heatmap, alpha=0.4)
+            
+            # Save output image
+            overlay_img.save(save_path)
+
+            # Explicit cleanup of temporary tensors and images
+            del conv_outputs, grads, pooled_grads, heatmap, heatmap_np
+            del heatmap_img, colored_heatmap, overlay_img, img_resized, img_array
+            gc.collect()
+
+            return True
     except Exception as e:
         print("Grad-CAM generation error:", e)
+        gc.collect()
         return False

@@ -1,6 +1,7 @@
 import os
 import uuid
 import hashlib
+import gc
 
 from flask import Blueprint, request, jsonify, send_from_directory, g
 from werkzeug.utils import secure_filename
@@ -152,6 +153,7 @@ def upload_xray():
         db.session.commit()
 
         # 5. Return result to React
+        gc.collect()
         return jsonify({
             "success": True,
             "message": "X-Ray analyzed successfully",
@@ -169,6 +171,7 @@ def upload_xray():
     except Exception as error:
 
         db.session.rollback()
+        gc.collect()
 
         print("Prediction error:", error)
 

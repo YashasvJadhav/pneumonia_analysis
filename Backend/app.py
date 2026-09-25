@@ -1,3 +1,8 @@
+import os
+# Ensure oneDNN memory scratch buffers are disabled before any TensorFlow blueprints load
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
 from flask import Flask, jsonify
 from flask_cors import CORS
 
@@ -44,15 +49,16 @@ with app.app_context():
 
 @app.route("/")
 def home():
-
     return jsonify({
         "message": "Pneumonia Analysis Backend Running"
     })
 
 
+@app.route("/healthz")
+def healthz():
+    return jsonify({"status": "healthy"}), 200
 
 
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
